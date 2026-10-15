@@ -140,16 +140,13 @@ jobs:
           REMOVE_CONFIG_FRAGMENTS: ${{ inputs.remove_fragments }}
         run: ./build.sh ${{ inputs.model }}
 
-      - name: Delete Old Cache
+      # Cache entries are managed by actions/cache. Deleting them here requires
+      # actions:write and can fail with HTTP 403 after a successful build.
+      - name: Cache Usage
         run: |
-          # 获取缓存列表并删除
-          gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
-            gh cache delete "$key"
-          done
-          # 输出缓存状态
           echo "========cache status========"
-          echo "ccache: $(du -sh ./action_build/.ccache | cut -f 1)"
-          echo "staging: $(du -sh ./action_build/staging_dir | cut -f 1)"
+          du -sh ./action_build/.ccache 2>/dev/null || true
+          du -sh ./action_build/staging_dir 2>/dev/null || true
 
       - name: Machine Information (Post-build)
         run: |
